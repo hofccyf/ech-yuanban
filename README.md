@@ -5,4 +5,4 @@ ech-win -f cf绑定域名:443 -pyip tw.william.us.ci -token xxx -ip 104.16.0.0
 ech-win -f cf绑定域名:443 -pyip 211.48.77.114:12312 -token xxx -ip 104.16.0.0
 
 ```
-##### 注：js源码中预设：威廉的反代域名  tw.william.us.ci  三种部署都支持, TOKEN=xxx 部署时请更换
+##### 注：workers、pages、snippets三种部署都支持, TOKEN=xxx 部署时请更换
