@@ -28,7 +28,7 @@ var (
 	token      string
 	dnsServer  string
 	echDomain  string
-	proxyIP    string 
+	proxyIP    string
 
 	echListMu sync.RWMutex
 	echList   []byte
@@ -41,7 +41,7 @@ func init() {
 	flag.StringVar(&token, "token", "", "身份验证令牌")
 	flag.StringVar(&dnsServer, "dns", "119.29.29.29:53", "ECH 查询 DNS 服务器")
 	flag.StringVar(&echDomain, "ech", "cloudflare-ech.com", "ECH 查询域名")
-	flag.StringVar(&proxyIP, "pyip", "", "代理服务器 IP（用于 Worker 连接回退，proxyip）") 
+	flag.StringVar(&proxyIP, "pyip", "", "代理服务器 IP（用于 Worker 连接回退，proxyip）")
 }
 
 func main() {
@@ -296,7 +296,15 @@ func dialWebSocketWithECH(maxRetries int) (*websocket.Conn, error) {
 				if err != nil {
 					return nil, err
 				}
-				return net.DialTimeout(network, net.JoinHostPort(serverIP, port), 10*time.Second)
+				// 添加的改进代码（完整 IPv6 支持）
+				ipHost := serverIP
+				userHost, userPort, splitErr := net.SplitHostPort(serverIP)
+				if splitErr == nil {
+					// 如果 serverIP 带端口，剥离并使用它（覆盖原 port）
+					ipHost = userHost
+					port = userPort // 覆盖原 port（如果不想覆盖，注释此行）
+				} // else: 无端口或无效格式，使用原 serverIP + 原 port
+				return net.DialTimeout(network, net.JoinHostPort(ipHost, port), 10*time.Second)
 			}
 		}
 
@@ -658,7 +666,7 @@ func handleTunnel(conn net.Conn, target, clientAddr string, mode int, firstFrame
 	if proxyIP != "" {
 		connectMsg = fmt.Sprintf("CONNECT:%s|%s|%s", target, firstFrame, proxyIP)
 	}
-	
+
 	mu.Lock()
 	err = wsConn.WriteMessage(websocket.TextMessage, []byte(connectMsg))
 	mu.Unlock()
