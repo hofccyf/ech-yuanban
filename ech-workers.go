@@ -296,12 +296,12 @@ func dialWebSocketWithECH(maxRetries int) (*websocket.Conn, error) {
 				if err != nil {
 					return nil, err
 				}
-				// IPv6 支持
+				//支持优选(非标端口), IPv6 支持
 				ipHost := serverIP
 				userHost, userPort, splitErr := net.SplitHostPort(serverIP)
 				if splitErr == nil {
 					ipHost = userHost
-					port = userPort // 覆盖原 port（如果不想覆盖，注释此行）
+					port = userPort
 				}
 				return net.DialTimeout(network, net.JoinHostPort(ipHost, port), 10*time.Second)
 			}
