@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -292,9 +293,8 @@ func (s *ProxyServer) handleHTTP(conn net.Conn, clientAddr string, firstByte byt
 		requestBuilder.WriteString("\r\n")
 
 		if contentLength := headers["content-length"]; contentLength != "" {
-			var length int
-			fmt.Sscanf(contentLength, "%d", &length)
-			if length > 0 && length < 10*1024*1024 {
+			length, err := strconv.Atoi(contentLength)
+			if err == nil && length > 0 && length < 10*1024*1024 {
 				body := make([]byte, length)
 				if _, err := io.ReadFull(reader, body); err == nil {
 					requestBuilder.Write(body)
@@ -354,7 +354,7 @@ func (s *ProxyServer) handleTunnel(conn net.Conn, target, clientAddr string, mod
 	conn.SetDeadline(time.Time{})
 
 	if firstFrame == nil && mode == ModeSOCKS5 {
-		_ = conn.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
+		_ = conn.SetReadDeadline(time.Now().Add(1 * time.Second)) // 增加超时时间
 		buffer := s.bufPool.Get().([]byte)
 		n, _ := conn.Read(buffer)
 		_ = conn.SetReadDeadline(time.Time{})
@@ -499,9 +499,5 @@ func isNormalCloseError(err error) bool {
 	return strings.Contains(errStr, "use of closed network connection") ||
 		strings.Contains(errStr, "broken pipe") ||
 		strings.Contains(errStr, "connection reset by peer") ||
-		contains(errStr, "normal closure")
-}
-
-func contains(s, substr string) bool {
-	return strings.Contains(s, substr)
+		strings.Contains(errStr, "normal closure")
 }
