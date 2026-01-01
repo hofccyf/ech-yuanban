@@ -26,14 +26,14 @@ func (c *Config) Validate() error {
 			return errors.New("监听地址格式无效")
 		}
 		// 如果没有端口，添加默认端口
-		if strings.Contains(c.ListenAddr, ":") {
-			// IPv6 地址
-			if strings.Contains(c.ListenAddr, "[") {
-				c.ListenAddr = c.ListenAddr + ":30000"
-			} else {
-				c.ListenAddr = "[" + c.ListenAddr + "]:30000"
-			}
+		if strings.Contains(c.ListenAddr, "[") && strings.HasSuffix(c.ListenAddr, "]") {
+			// IPv6 地址格式如 [2001:db8::1]
+			c.ListenAddr = c.ListenAddr + ":30000"
+		} else if strings.Contains(c.ListenAddr, ":") && !strings.Contains(c.ListenAddr, "[") {
+			// IPv6 地址格式如 2001:db8::1
+			c.ListenAddr = "[" + c.ListenAddr + "]:30000"
 		} else {
+			// IPv4 地址
 			c.ListenAddr = c.ListenAddr + ":30000"
 		}
 	}
